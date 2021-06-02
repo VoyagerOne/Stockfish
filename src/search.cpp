@@ -1162,6 +1162,10 @@ moves_loop: // When in check, search starts from here
 
           if (!captureOrPromotion)
           {
+
+              if ((ss-1)->research)
+                  r++;
+
               // Increase reduction if ttMove is a capture (~3 Elo)
               if (ttCapture)
                   r++;
@@ -1197,7 +1201,9 @@ moves_loop: // When in check, search starts from here
       // Step 17. Full depth search when LMR is skipped or fails high
       if (doFullDepthSearch)
       {
+          ss->research = didLMR;
           value = -search<NonPV>(pos, ss+1, -(alpha+1), -alpha, newDepth, !cutNode);
+          ss->research = false;
 
           // If the move passed LMR update its stats
           if (didLMR && !captureOrPromotion)
