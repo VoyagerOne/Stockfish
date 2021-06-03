@@ -1163,7 +1163,8 @@ moves_loop: // When in check, search starts from here
 
           if (!captureOrPromotion)
           {
-              if ((ss + 1)->cutoffCnt > 3)
+
+              if ((ss + 1)->cutoffCnt > 5)
                   r++;
 
               // Increase reduction if ttMove is a capture (~3 Elo)
