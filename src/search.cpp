@@ -1149,6 +1149,10 @@ moves_loop: // When in check, search starts from here
               && thisThread->bestMoveChanges <= 2)
               r++;
 
+
+          if ((ss + 1)->cutoffCnt > 3)
+              r++;
+
           // Decrease reduction if opponent's move count is high (~1 Elo)
           if ((ss-1)->moveCount > 13)
               r--;
@@ -1163,8 +1167,7 @@ moves_loop: // When in check, search starts from here
 
           if (!captureOrPromotion)
           {
-              if ((ss + 1)->cutoffCnt > 3)
-                  r++;
+
 
               // Increase reduction if ttMove is a capture (~3 Elo)
               if (ttCapture)
