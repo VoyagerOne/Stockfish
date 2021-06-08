@@ -1012,9 +1012,10 @@ moves_loop: // When in check, search starts from here
           // Reduced depth of the next LMR search
           int lmrDepth = std::max(newDepth - reduction(improving, depth, moveCount), 0);
 
-          if (   captureOrPromotion
-              || givesCheck)
+          if (   (captureOrPromotion
+              || givesCheck))
           {
+
               // Capture history based pruning when the move doesn't give check
               if (   !givesCheck
                   && lmrDepth < 1
@@ -1128,13 +1129,16 @@ moves_loop: // When in check, search starts from here
       if (    depth >= 3
           &&  moveCount > 1 + 2 * rootNode
           && (  !captureOrPromotion
-              || (cutNode && (ss-1)->moveCount > 1 && move != ss->captureKiller)
-              || (!ss->ttPv && move != ss->captureKiller))
+              || (cutNode && (ss-1)->moveCount > 1)
+              || !ss->ttPv)
           && (!PvNode || ss->ply > 1 || thisThread->id() % 4 != 3))
       {
           Depth r = reduction(improving, depth, moveCount);
 
           if (PvNode)
+              r--;
+
+          if (captureOrPromotion && move == ss->captureKiller)
               r--;
 
           // Decrease reduction if the ttHit running average is large (~0 Elo)
