@@ -1100,7 +1100,8 @@ moves_loop: // When in check, search starts from here
       }
       else if (   givesCheck
                && depth > 6
-               && abs(ss->staticEval) > Value(100))
+               && abs(ss->staticEval) > Value(100)
+               && pos.see_ge(move))
           extension = 1;
 
       // Add extension to new depth
