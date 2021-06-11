@@ -566,7 +566,7 @@ namespace {
     Value bestValue, value, ttValue, eval, maxValue, probCutBeta;
     bool givesCheck, improving, didLMR, priorCapture;
     bool captureOrPromotion, doFullDepthSearch, moveCountPruning,
-         ttCapture, singularQuietLMR;
+         ttCapture, singularQuietLMR, onPV;
     Piece movedPiece;
     int moveCount, captureCount, quietCount;
 
@@ -921,6 +921,7 @@ namespace {
 moves_loop: // When in check, search starts from here
 
     ttCapture = ttMove && pos.capture_or_promotion(ttMove);
+    onPV = (ss->ttHit && tte->is_pv());
 
     // Step 11. A small Probcut idea, when we are in check
     probCutBeta = beta + 409;
@@ -1132,7 +1133,7 @@ moves_loop: // When in check, search starts from here
       {
           Depth r = reduction(improving, depth, moveCount);
 
-          if (PvNode)
+          if (PvNode && !onPV)
               r--;
 
           // Decrease reduction if the ttHit running average is large (~0 Elo)
