@@ -1131,7 +1131,7 @@ moves_loop: // When in check, search starts from here
           && (!PvNode || ss->ply > 1 || thisThread->id() % 4 != 3))
       {
           Depth r = reduction(improving, depth, moveCount);
-
+          Depth t = r;
           if (PvNode)
               r--;
 
@@ -1165,9 +1165,16 @@ moves_loop: // When in check, search starts from here
 
           if (!captureOrPromotion)
           {
+           
+              if (t - r >= 4)
+                  r++;
+
+
               // Increase reduction if ttMove is a capture (~3 Elo)
               if (ttCapture)
                   r++;
+
+
 
               ss->statScore =  thisThread->mainHistory[us][from_to(move)]
                              + (*contHist[0])[movedPiece][to_sq(move)]
