@@ -1142,7 +1142,7 @@ moves_loop: // When in check, search starts from here
       {
           Depth r = reduction(improving, depth, moveCount);
 
-          if (PvNode && depth <= 6)
+          if (PvNode && depth >= 6)
               r--;
 
           // Decrease reduction if the ttHit running average is large (~0 Elo)
