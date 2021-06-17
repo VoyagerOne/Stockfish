@@ -1129,6 +1129,71 @@ moves_loop: // When in check, search starts from here
       // Step 15. Make the move
       pos.do_move(move, st, givesCheck);
 
+      if (depth >= 6
+          && !extension
+          && move == ttMove
+          && !excludedMove
+          && moveCount == 1)
+      {
+          Depth r = reduction(improving, depth, moveCount);
+
+          if (PvNode)
+              r--;
+
+          // Decrease reduction if the ttHit running average is large (~0 Elo)
+          if (thisThread->ttHitAverage > 537 * TtHitAverageResolution * TtHitAverageWindow / 1024)
+              r--;
+
+          // Decrease reduction if position is or has been on the PV
+          // and node is not likely to fail low. (~3 Elo)
+          if (ss->ttPv
+              && !likelyFailLow)
+              r -= 2;
+
+          // Increase reduction at root and non-PV nodes when the best move does not change frequently
+          if ((rootNode || !PvNode)
+              && thisThread->bestMoveChanges <= 2)
+              r++;
+
+          // Decrease reduction if opponent's move count is high (~1 Elo)
+          if ((ss - 1)->moveCount > 13)
+              r--;
+
+          // Decrease reduction if ttMove has been singularly extended (~1 Elo)
+          if (singularQuietLMR)
+              r--;
+
+          // Increase reduction for cut nodes (~3 Elo)
+          if (cutNode)
+              r += 1 + !captureOrPromotion;
+
+          if (!captureOrPromotion)
+          {
+
+              ss->statScore = thisThread->mainHistory[us][from_to(move)]
+                  + (*contHist[0])[movedPiece][to_sq(move)]
+                  + (*contHist[1])[movedPiece][to_sq(move)]
+                  + (*contHist[3])[movedPiece][to_sq(move)]
+                  - 4923;
+
+              // Decrease/increase reduction for moves with a good/bad history (~30 Elo)
+              if (!ss->inCheck)
+                  r -= ss->statScore / 14721;
+          }
+
+         // dbg_hit_on(r < -4 && !doubleExtension);
+
+          if (r < -4 && !doubleExtension)
+          {
+              extension = 1;
+              newDepth++;
+          }
+              
+
+      }
+
+      
+
       // Step 16. Late moves reduction / extension (LMR, ~200 Elo)
       // We use various heuristics for the sons of a node after the first son has
       // been searched. In general we would like to reduce them, but there are many
