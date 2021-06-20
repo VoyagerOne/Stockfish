@@ -566,7 +566,7 @@ namespace {
     Value bestValue, value, ttValue, eval, maxValue, probCutBeta;
     bool givesCheck, improving, didLMR, priorCapture;
     bool captureOrPromotion, doFullDepthSearch, moveCountPruning,
-         ttCapture, singularQuietLMR;
+         ttCapture, singularQuietLMR, noPVttHit;
     Piece movedPiece;
     int moveCount, captureCount, quietCount;
 
@@ -635,6 +635,8 @@ namespace {
             : ss->ttHit    ? tte->move() : MOVE_NONE;
     if (!excludedMove)
         ss->ttPv = PvNode || (ss->ttHit && tte->is_pv());
+
+    noPVttHit = false;
 
     // Update low ply history for previous move if we are near root and position is or has been in PV
     if (   ss->ttPv
@@ -917,7 +919,7 @@ namespace {
     if (   PvNode
         && depth >= 6
         && !ttMove)
-        depth -= 2;
+        depth -= 2, noPVttHit=true;
 
 moves_loop: // When in check, search starts from here
 
@@ -1109,6 +1111,7 @@ moves_loop: // When in check, search starts from here
       }
       else if (   givesCheck
                && depth > 6
+               && !noPVttHit
                && abs(ss->staticEval) > Value(100))
           extension = 1;
 
