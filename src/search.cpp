@@ -767,6 +767,9 @@ namespace {
     if (is_ok((ss-1)->currentMove) && !(ss-1)->inCheck && !priorCapture)
     {
         int bonus = std::clamp(-depth * 4 * int((ss-1)->staticEval + ss->staticEval), -1000, 1000);
+        
+        improving = bonus>0;
+        
         thisThread->mainHistory[~us][from_to((ss-1)->currentMove)] << bonus;
     }
 
@@ -774,6 +777,8 @@ namespace {
     // We define position as improving if static evaluation of position is better
     // Than the previous static evaluation at our turn
     // In case of us being in check at our previous move we look at move prior to it
+    
+    if(!improving)
     improving =  (ss-2)->staticEval == VALUE_NONE
                ? ss->staticEval > (ss-4)->staticEval || (ss-4)->staticEval == VALUE_NONE
                : ss->staticEval > (ss-2)->staticEval;
