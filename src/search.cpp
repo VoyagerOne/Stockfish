@@ -769,7 +769,7 @@ namespace {
     {
         int bonus = std::clamp(-depth * 4 * int((ss-1)->staticEval + ss->staticEval), -1000, 1000);
         
-        improving = bonus>0;
+        improving = bonus<=0;
         
         thisThread->mainHistory[~us][from_to((ss-1)->currentMove)] << bonus;
     }
