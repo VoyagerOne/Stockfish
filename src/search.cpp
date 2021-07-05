@@ -600,7 +600,7 @@ namespace {
 
     (ss+1)->ttPv         = false;
     (ss+1)->excludedMove = bestMove = MOVE_NONE;
-    (ss+2)->killers[0]   = (ss+2)->killers[1] = MOVE_NONE;
+    (ss+2)->killers[0]   = (ss+2)->killers[1] = (ss + 2)->killers[2] = MOVE_NONE;
     ss->doubleExtensions = (ss-1)->doubleExtensions;
     Square prevSq        = to_sq((ss-1)->currentMove);
 
@@ -1162,6 +1162,10 @@ moves_loop: // When in check, search starts from here
 
           if (!captureOrPromotion)
           {
+              //Strong killer move
+              if (move == ss->killers[2] && move == ss->killers[0])
+                  r--;
+
               // Increase reduction if ttMove is a capture (~3 Elo)
               if (ttCapture)
                   r++;
@@ -1702,11 +1706,13 @@ moves_loop: // When in check, search starts from here
   void update_quiet_stats(const Position& pos, Stack* ss, Move move, int bonus, int depth) {
 
     // Update killers
-    if (ss->killers[0] != move)
-    {
-        ss->killers[1] = ss->killers[0];
-        ss->killers[0] = move;
-    }
+      if (ss->killers[0] != move)
+      {
+          ss->killers[1] = ss->killers[0];
+          ss->killers[0] = move;
+      }
+      else
+          ss->killers[2] = move;
 
     Color us = pos.side_to_move();
     Thread* thisThread = pos.this_thread();
