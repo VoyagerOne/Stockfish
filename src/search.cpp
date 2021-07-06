@@ -932,6 +932,10 @@ moves_loop: // When in check, search starts from here
 
     Move countermove = thisThread->counterMoves[pos.piece_on(prevSq)][prevSq];
 
+    if (countermove && depth < 6 && (*contHist[0])[pos.moved_piece(countermove)][to_sq(countermove)] < CounterMovePruneThreshold)
+        countermove = MOVE_NONE;
+
+
     MovePicker mp(pos, ttMove, depth, &thisThread->mainHistory,
                                       &thisThread->lowPlyHistory,
                                       &captureHistory,
