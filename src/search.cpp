@@ -550,7 +550,7 @@ namespace {
     TTEntry* tte;
     Key posKey;
     Move ttMove, move, excludedMove, bestMove;
-    Depth extension, newDepth;
+    Depth newDepth;
     Value bestValue, value, ttValue, eval, maxValue, probCutBeta;
     bool givesCheck, improving, didLMR, priorCapture;
     bool captureOrPromotion, doFullDepthSearch, moveCountPruning,
@@ -981,7 +981,7 @@ moves_loop: // When in check, search starts from here
       if (PvNode)
           (ss+1)->pv = nullptr;
 
-      extension = 0;
+      ss->extension = 0;
       captureOrPromotion = pos.capture_or_promotion(move);
       movedPiece = pos.moved_piece(move);
       givesCheck = pos.gives_check(move);
@@ -1062,7 +1062,7 @@ moves_loop: // When in check, search starts from here
 
           if (value < singularBeta)
           {
-              extension = 1;
+              ss->extension = 1;
               singularQuietLMR = !ttCapture;
 
               // Avoid search explosion by limiting the number of double extensions to at most 3
@@ -1070,7 +1070,7 @@ moves_loop: // When in check, search starts from here
                   && value < singularBeta - 93
                   && ss->doubleExtensions < 3)
               {
-                  extension = 2;
+                  ss->extension = 2;
                   doubleExtension = true;
               }
           }
@@ -1090,6 +1090,7 @@ moves_loop: // When in check, search starts from here
               ss->excludedMove = move;
               value = search<NonPV>(pos, ss, beta - 1, beta, (depth + 3) / 2, cutNode);
               ss->excludedMove = MOVE_NONE;
+              ss->extension = 0;
 
               if (value >= beta)
                   return beta;
@@ -1098,11 +1099,11 @@ moves_loop: // When in check, search starts from here
       else if (   givesCheck
                && depth > 6
                && abs(ss->staticEval) > Value(100))
-          extension = 1;
+          ss->extension = 1;
 
       // Add extension to new depth
-      newDepth += extension;
-      ss->doubleExtensions = (ss-1)->doubleExtensions + (extension == 2);
+      newDepth += ss->extension;
+      ss->doubleExtensions = (ss-1)->doubleExtensions + (ss->extension == 2);
 
       // Speculative prefetch as early as possible
       prefetch(TT.first_entry(pos.key_after(move)));
@@ -1180,7 +1181,7 @@ moves_loop: // When in check, search starts from here
           // In general we want to cap the LMR depth search at newDepth. But if
           // reductions are really negative and movecount is low, we allow this move
           // to be searched deeper than the first move, unless ttMove was extended by 2.
-          Depth d = std::clamp(newDepth - r, 1, newDepth + (r < -1 && moveCount <= 5 && !doubleExtension));
+          Depth d = std::clamp(newDepth - r, 1, newDepth + (r < -1 && moveCount <= 5 && !doubleExtension && !(ss-1)->extension));
 
           value = -search<NonPV>(pos, ss+1, -(alpha+1), -alpha, d, true);
 
