@@ -1159,7 +1159,7 @@ moves_loop: // When in check, search starts from here
               r--;
 
           if ((ss - 1)->extension == 2)
-              r++;
+              r--;
 
           // Increase reduction for cut nodes (~3 Elo)
           if (cutNode && move != ss->killers[0])
