@@ -43,6 +43,7 @@ struct Stack {
   Move* pv;
   PieceToHistory* continuationHistory;
   int ply;
+  Depth extension;
   Move currentMove;
   Move excludedMove;
   Move killers[2];
