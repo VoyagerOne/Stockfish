@@ -1478,29 +1478,35 @@ moves_loop: // When in check, search starts from here
 
       moveCount++;
 
+
       // Futility pruning and moveCount pruning
       if (    bestValue > VALUE_TB_LOSS_IN_MAX_PLY
           && !givesCheck
-          &&  futilityBase > -VALUE_KNOWN_WIN
           &&  type_of(move) != PROMOTION)
       {
 
           if (moveCount > 2)
               continue;
 
-          futilityValue = futilityBase + PieceValue[EG][pos.piece_on(to_sq(move))];
-
-          if (futilityValue <= alpha)
+          if (futilityBase > -VALUE_KNOWN_WIN)
           {
-              bestValue = std::max(bestValue, futilityValue);
-              continue;
+              futilityValue = futilityBase + PieceValue[EG][pos.piece_on(to_sq(move))];
+
+              if (futilityValue <= alpha)
+              {
+                  bestValue = std::max(bestValue, futilityValue);
+                  continue;
+              }
+
+              if (futilityBase <= alpha && !pos.see_ge(move, VALUE_ZERO + 1))
+              {
+                  bestValue = std::max(bestValue, futilityBase);
+                  continue;
+              }
+
           }
 
-          if (futilityBase <= alpha && !pos.see_ge(move, VALUE_ZERO + 1))
-          {
-              bestValue = std::max(bestValue, futilityBase);
-              continue;
-          }
+
       }
 
       // Do not search moves with negative SEE values
