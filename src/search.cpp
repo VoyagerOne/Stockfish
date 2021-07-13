@@ -1336,7 +1336,7 @@ moves_loop: // When in check, search starts from here
         ss->ttPv = ss->ttPv && (ss+1)->ttPv;
 
     // Write gathered information in transposition table
-    if (!excludedMove && !(rootNode && thisThread->pvIdx))
+    if (!excludedMove && !(rootNode && thisThread->pvIdx) && (ss-1)->currentMove != MOVE_NULL)
         tte->save(posKey, value_to_tt(bestValue, ss->ply), ss->ttPv,
                   bestValue >= beta ? BOUND_LOWER :
                   PvNode && bestMove ? BOUND_EXACT : BOUND_UPPER,
