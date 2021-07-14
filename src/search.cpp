@@ -1100,7 +1100,7 @@ moves_loop: // When in check, search starts from here
           extension = 1;
 
       else if (PvNode
-          && ttMove
+          && ttMove == move
           && ss->inCheck
           && MoveList<LEGAL>(pos).size() == 1)
           extension = 1;
