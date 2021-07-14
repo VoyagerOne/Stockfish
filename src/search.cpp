@@ -775,7 +775,7 @@ namespace {
     // We define position as improving if static evaluation of position is better
     // Than the previous static evaluation at our turn
     // In case of us being in check at our previous move we look at move prior to it
-    if (excludedMove)
+    if ((ss-1)->excludedMove)
         improving = true;
     else
     improving =  (ss-2)->staticEval == VALUE_NONE
