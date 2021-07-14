@@ -1099,7 +1099,8 @@ moves_loop: // When in check, search starts from here
                && abs(ss->staticEval) > Value(100))
           extension = 1;
 
-      else if (depth>6
+      else if (depth > 6
+          && moveCount == 1
           && ss->inCheck
           && MoveList<LEGAL>(pos).size() == 1)
           extension = 1;
