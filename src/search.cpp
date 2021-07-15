@@ -552,7 +552,7 @@ namespace {
     Move ttMove, move, excludedMove, bestMove;
     Depth extension, newDepth;
     Value bestValue, value, ttValue, eval, maxValue, probCutBeta;
-    bool givesCheck, improving, didLMR, priorCapture;
+    bool givesCheck, didLMR, priorCapture;
     bool captureOrPromotion, doFullDepthSearch, moveCountPruning,
          ttCapture, singularQuietLMR;
     Piece movedPiece;
@@ -731,7 +731,7 @@ namespace {
     {
         // Skip early pruning when in check
         ss->staticEval = eval = VALUE_NONE;
-        improving = false;
+        ss->improving = false;
         goto moves_loop;
     }
     else if (ss->ttHit)
@@ -775,13 +775,13 @@ namespace {
     // We define position as improving if static evaluation of position is better
     // Than the previous static evaluation at our turn
     // In case of us being in check at our previous move we look at move prior to it
-    improving =  (ss-2)->staticEval == VALUE_NONE
+    ss->improving =  (ss-2)->staticEval == VALUE_NONE
                ? ss->staticEval > (ss-4)->staticEval || (ss-4)->staticEval == VALUE_NONE
                : ss->staticEval > (ss-2)->staticEval;
 
     // Step 7. Futility pruning: child node (~50 Elo)
     if (   !PvNode
-        &&  eval - futility_margin(depth, improving) >= beta
+        &&  eval - futility_margin(depth, ss->improving) >= beta
         &&  eval < VALUE_KNOWN_WIN) // Do not return unproven wins
         return eval;
 
@@ -791,7 +791,7 @@ namespace {
         && (ss-1)->statScore < 23767
         &&  eval >= beta
         &&  eval >= ss->staticEval
-        &&  ss->staticEval >= beta - 20 * depth - 22 * improving + 168 * ss->ttPv + 159
+        &&  ss->staticEval >= beta - 20 * depth - 22 * ss->improving + 168 * ss->ttPv + 159
         && !excludedMove
         &&  pos.non_pawn_material(us)
         && (ss->ply >= thisThread->nmpMinPly || us != thisThread->nmpColor))
@@ -835,7 +835,7 @@ namespace {
         }
     }
 
-    probCutBeta = beta + 209 - 44 * improving;
+    probCutBeta = beta + 209 - 44 * ss->improving;
 
     // Step 9. ProbCut (~4 Elo)
     // If we have a good enough capture and a reduced search returns a value
@@ -995,10 +995,10 @@ moves_loop: // When in check, search starts from here
           && bestValue > VALUE_TB_LOSS_IN_MAX_PLY)
       {
           // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
-          moveCountPruning = moveCount >= futility_move_count(improving, depth);
+          moveCountPruning = moveCount >= futility_move_count(ss->improving, depth);
 
           // Reduced depth of the next LMR search
-          int lmrDepth = std::max(newDepth - reduction(improving, depth, moveCount), 0);
+          int lmrDepth = std::max(newDepth - reduction(ss->improving, depth, moveCount), 0);
 
           if (   captureOrPromotion
               || givesCheck)
@@ -1055,10 +1055,11 @@ moves_loop: // When in check, search starts from here
           Value singularBeta = ttValue - 2 * depth;
           Depth singularDepth = (depth - 1) / 2;
 
+          bool temp = ss->improving;
           ss->excludedMove = move;
           value = search<NonPV>(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode);
           ss->excludedMove = MOVE_NONE;
-
+          ss->improving = temp;
           if (value < singularBeta)
           {
               extension = 1;
@@ -1089,6 +1090,7 @@ moves_loop: // When in check, search starts from here
               ss->excludedMove = move;
               value = search<NonPV>(pos, ss, beta - 1, beta, (depth + 3) / 2, cutNode);
               ss->excludedMove = MOVE_NONE;
+              ss->improving = temp;
 
               if (value >= beta)
                   return beta;
@@ -1127,9 +1129,12 @@ moves_loop: // When in check, search starts from here
               || !ss->ttPv)
           && (!PvNode || ss->ply > 1 || thisThread->id() % 4 != 3))
       {
-          Depth r = reduction(improving, depth, moveCount);
+          Depth r = reduction(ss->improving, depth, moveCount);
 
           if (PvNode)
+              r--;
+
+          if ((ss - 2)->improving && !(ss - 1)->improving && ss->improving)
               r--;
 
           // Decrease reduction if the ttHit running average is large (~0 Elo)
