@@ -1043,14 +1043,14 @@ moves_loop: // When in check, search starts from here
       // then that move is singular and should be extended. To verify this we do
       // a reduced search on all the other moves but the ttMove and if the
       // result is lower than ttValue minus a margin, then we will extend the ttMove.
-      if (   !rootNode
-          &&  depth >= 7
-          &&  move == ttMove
+      if (!rootNode
+          && depth >= 7
+          && move == ttMove
           && !excludedMove // Avoid recursive singular search
        /* &&  ttValue != VALUE_NONE Already implicit in the next condition */
-          &&  abs(ttValue) < VALUE_KNOWN_WIN
+          && abs(ttValue) < VALUE_KNOWN_WIN
           && (tte->bound() & BOUND_LOWER)
-          &&  tte->depth() >= depth - 3)
+          && tte->depth() >= depth - 3)
       {
           Value singularBeta = ttValue - 2 * depth;
           Depth singularDepth = (depth - 1) / 2;
@@ -1066,7 +1066,7 @@ moves_loop: // When in check, search starts from here
               singularQuietLMR = !ttCapture;
 
               // Avoid search explosion by limiting the number of double extensions to at most 3
-              if (   !PvNode
+              if (!PvNode
                   && value < singularBeta - 93
                   && ss->doubleExtensions < 3)
               {
@@ -1096,10 +1096,18 @@ moves_loop: // When in check, search starts from here
                   return beta;
           }
       }
-      else if (   givesCheck
-               && depth > 6
-               && abs(ss->staticEval) > Value(100))
+      else if (givesCheck
+          && depth > 6
+          && abs(ss->staticEval) > Value(100))
           extension = 1;
+
+      else if (ss->inCheck
+          && depth > 6
+          && (ss - 2)->improving)
+          extension = 1;
+
+
+                      
 
       // Add extension to new depth
       newDepth += extension;
@@ -1132,9 +1140,6 @@ moves_loop: // When in check, search starts from here
           Depth r = reduction(ss->improving, depth, moveCount);
 
           if (PvNode)
-              r--;
-
-          if ((ss - 2)->improving && !(ss - 1)->improving && ss->improving)
               r--;
 
           // Decrease reduction if the ttHit running average is large (~0 Elo)
