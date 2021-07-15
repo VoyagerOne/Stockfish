@@ -1134,8 +1134,6 @@ moves_loop: // When in check, search starts from here
           if (PvNode)
               r--;
 
-          if ((ss - 2)->improving && !(ss - 1)->improving && ss->improving)
-              r--;
 
           // Decrease reduction if the ttHit running average is large (~0 Elo)
           if (thisThread->ttHitAverage > 537 * TtHitAverageResolution * TtHitAverageWindow / 1024)
@@ -1168,6 +1166,10 @@ moves_loop: // When in check, search starts from here
           {
               // Increase reduction if ttMove is a capture (~3 Elo)
               if (ttCapture)
+                  r++;
+
+             
+              if (!(ss - 2)->improving && (ss - 1)->improving && !ss->improving && !(ss - 2)->inCheck && !ss->inCheck)
                   r++;
 
               ss->statScore =  thisThread->mainHistory[us][from_to(move)]
