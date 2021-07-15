@@ -1099,6 +1099,11 @@ moves_loop: // When in check, search starts from here
                && abs(ss->staticEval) > Value(100))
           extension = 1;
 
+      else if (move==ttMove
+          && ss->inCheck
+          && MoveList<LEGAL>(pos).size() == 1)
+          extension = 1;
+
       // Add extension to new depth
       newDepth += extension;
       ss->doubleExtensions = (ss-1)->doubleExtensions + (extension == 2);
