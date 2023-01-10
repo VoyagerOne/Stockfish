@@ -567,8 +567,7 @@ namespace {
     moveCount          = captureCount = quietCount = ss->moveCount = 0;
     bestValue          = -VALUE_INFINITE;
     maxValue           = VALUE_INFINITE;
-    ss->cutnode;
-
+    ss->cutnode = cutNode;
 
     // Check for the available remaining time
     if (thisThread == Threads.main())
