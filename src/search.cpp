@@ -1125,14 +1125,15 @@ moves_loop: // When in check, search starts here
 
       Depth r = reduction(improving, depth, moveCount, delta, thisThread->rootDelta);
 
+
       // Decrease reduction if position is or has been on the PV
       // and node is not likely to fail low. (~3 Elo)
-      if (   ss->ttPv
+      if (ss->ttPv
           && !likelyFailLow)
           r -= 2;
-
+    
       // Decrease reduction if opponent's move count is high (~1 Elo)
-      if ((ss-1)->moveCount > 7)
+      if ((ss - 1)->moveCount > 7)
           r--;
 
       // Increase reduction for cut nodes (~3 Elo)
@@ -1166,8 +1167,14 @@ moves_loop: // When in check, search starts here
                      + (*contHist[3])[movedPiece][to_sq(move)]
                      - 4467;
 
+      int rHist= ss->statScore / (12800 + 4410 * (depth > 7 && depth < 19));
+   
+      if (cutNode)
+        rHist = std::min(rHist, 3);
+
+      
       // Decrease/increase reduction for moves with a good/bad history (~30 Elo)
-      r -= ss->statScore / (12800 + 4410 * (depth > 7 && depth < 19));
+      r -= rHist;
 
       // Step 17. Late moves reduction / extension (LMR, ~117 Elo)
       // We use various heuristics for the sons of a node after the first son has
