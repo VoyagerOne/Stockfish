@@ -899,10 +899,6 @@ namespace {
     if (depth <= 0)
         return qsearch<PV>(pos, ss, alpha, beta);
 
-    if (    cutNode
-        &&  depth >= 9
-        && !ttMove)
-        depth -= 2;
 
 moves_loop: // When in check, search starts here
 
@@ -1143,6 +1139,13 @@ moves_loop: // When in check, search starts here
       if (ttCapture)
           r++;
 
+
+      if (cutNode
+          && depth >= 8
+          && !ttMove)
+          r += 2;
+
+
       // Decrease reduction for PvNodes based on depth
       if (PvNode)
           r -= 1 + 11 / (3 + depth);
@@ -1215,10 +1218,6 @@ moves_loop: // When in check, search starts here
       // Step 18. Full depth search when LMR is skipped. If expected reduction is high, reduce its depth by 1.
       else if (!PvNode || moveCount > 1)
       {
-               // Increase reduction for cut nodes and not ttMove (~1 Elo)
-               if (!ttMove && cutNode)
-                         r += 2;
-
                value = -search<NonPV>(pos, ss+1, -(alpha+1), -alpha, newDepth - (r > 4), !cutNode);
       }
 
