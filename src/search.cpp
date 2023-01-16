@@ -793,6 +793,7 @@ namespace {
         && (ss-1)->currentMove != MOVE_NULL
         && (ss-1)->statScore < 18200
         &&  eval >= beta
+        && !(ss-1)->didExt
         &&  eval >= ss->staticEval
         &&  ss->staticEval >= beta - 20 * depth - improvement / 14 + 235 + complexity / 24
         && !excludedMove
@@ -845,6 +846,7 @@ namespace {
     // much above beta, we can (almost) safely prune the previous move.
     if (   !PvNode
         &&  depth > 4
+        && !(ss-1)->didExt
         &&  abs(beta) < VALUE_TB_WIN_IN_MAX_PLY
         // if value from transposition table is lower than probCutBeta, don't attempt probCut
         // there and in further interactions with transposition table cutoff depth is set to depth - 3
@@ -856,7 +858,7 @@ namespace {
              && ttValue < probCutBeta))
     {
         assert(probCutBeta < VALUE_INFINITE);
-
+ 
         MovePicker mp(pos, ttMove, probCutBeta - ss->staticEval, &captureHistory);
 
         while ((move = mp.next_move()) != MOVE_NONE)
@@ -1108,6 +1110,7 @@ moves_loop: // When in check, search starts here
 
       // Add extension to new depth
       newDepth += extension;
+      ss->didExt = extension;
       ss->doubleExtensions = (ss-1)->doubleExtensions + (extension == 2);
 
       // Speculative prefetch as early as possible
@@ -1198,6 +1201,8 @@ moves_loop: // When in check, search starts here
               ss->doubleExtensions = ss->doubleExtensions + doEvenDeeperSearch;
 
               newDepth += doDeeperSearch - doShallowerSearch + doEvenDeeperSearch;
+              if (!ss->didExt && doDeeperSearch)
+                  ss->didExt = true;
 
               if (newDepth > d)
                   value = -search<NonPV>(pos, ss+1, -(alpha+1), -alpha, newDepth, !cutNode);
