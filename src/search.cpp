@@ -1147,7 +1147,7 @@ moves_loop: // When in check, search starts here
           r++;
 
       if (moveCount > 2 && !playStrongMove && PvNode)
-          r--;
+          r-=2;
 
       // Decrease reduction for PvNodes based on depth
       if (PvNode)
