@@ -1213,6 +1213,9 @@ moves_loop: // When in check, search starts here
                   bonus /= 6;
 
               update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
+
+              if (value > alpha && !capture && is_ok((ss - 1)->currentMove))
+                  thisThread->counterMoves[pos.piece_on(prevSq)][prevSq] = move;
           }
       }
 
