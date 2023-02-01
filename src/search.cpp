@@ -640,6 +640,11 @@ namespace {
         {
             if (ttValue >= beta)
             {
+
+                // Update countermove history
+                if (is_ok((ss - 1)->currentMove))
+                    thisThread->counterMoves[pos.piece_on(prevSq)][prevSq] = bestMove;
+
                 // Bonus for a quiet ttMove that fails high (~2 Elo)
                 if (!ttCapture)
                     update_quiet_stats(pos, ss, ttMove, stat_bonus(depth));
@@ -1712,6 +1717,15 @@ moves_loop: // When in check, search starts here
         // Increase stats for the best move in case it was a capture move
         captureHistory[moved_piece][to_sq(bestMove)][captured] << bonus1;
 
+
+    // Update countermove history
+    if (is_ok((ss - 1)->currentMove))
+    {
+        Square prevSq = to_sq((ss - 1)->currentMove);
+        thisThread->counterMoves[pos.piece_on(prevSq)][prevSq] = bestMove;
+    }
+
+
     // Extra penalty for a quiet early move that was not a TT move or
     // main killer move in previous ply when it gets refuted.
     if (   ((ss-1)->moveCount == 1 + (ss-1)->ttHit || ((ss-1)->currentMove == (ss-1)->killers[0]))
@@ -1760,12 +1774,7 @@ moves_loop: // When in check, search starts here
     thisThread->mainHistory[us][from_to(move)] << bonus;
     update_continuation_histories(ss, pos.moved_piece(move), to_sq(move), bonus);
 
-    // Update countermove history
-    if (is_ok((ss-1)->currentMove))
-    {
-        Square prevSq = to_sq((ss-1)->currentMove);
-        thisThread->counterMoves[pos.piece_on(prevSq)][prevSq] = move;
-    }
+
   }
 
   // When playing with strength handicap, choose best move among a set of RootMoves
